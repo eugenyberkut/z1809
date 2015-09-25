@@ -7,11 +7,11 @@ import java.sql.SQLException;
 /**
  * Created by Yevhen on 18.09.2015.
  */
-public class AvtorTableModel extends AbstractTableModel{
+public class ViewAvtorTableModel extends AbstractTableModel{
     ResultSet rs;
     private String[] columns = {"id", "Имя", "Коммент"};
 
-    public AvtorTableModel(ResultSet rs) {
+    public ViewAvtorTableModel(ResultSet rs) {
         this.rs = rs;
     }
 

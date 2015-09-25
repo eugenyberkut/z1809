@@ -2,9 +2,7 @@ package logic;
 
 import gui.MyFrame;
 
-import javax.swing.*;
 import javax.swing.table.TableModel;
-import java.awt.*;
 import java.sql.*;
 
 /**
@@ -16,11 +14,15 @@ public class Main {
     }
 
     Connection connection;
+    private static Main main;
+
+    private Main(){};
 
     private void run() {
 
         try {
             connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/homelibrary", "eugeny", "123");
+            main = this;
             MyFrame myFrame = new MyFrame(this);
             myFrame.setVisible(true);
 //            addAvtor(connection, "Shevchenko", "Ukrainian");
@@ -42,17 +44,30 @@ public class Main {
         }
     }
 
-    public TableModel getAvtorsModel() throws SQLException {
+    public TableModel getAvtorsModel(boolean editable) throws SQLException {
         Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
         ResultSet resultSet = statement.executeQuery("SELECT * FROM avtor");
-        AvtorTableModel model = new AvtorTableModel(resultSet);
-        return model;
+        if (editable) {
+            return new EditAvtorTableModel(resultSet);
+        } else {
+            return new ViewAvtorTableModel(resultSet);
+        }
     }
 
-    private void addAvtor(String avtor, String comment) throws SQLException {
+    public void addAvtor(String avtor, String comment) throws SQLException {
         PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO avtor (name, comment) VALUES (?,?)");
         insertStatement.setString(1, avtor);
         insertStatement.setString(2, comment);
         insertStatement.executeUpdate();
+    }
+
+    public static Main getMain() {
+        return main;
+    }
+
+    public void deleteAvtor(Integer id) throws SQLException {
+        PreparedStatement deleteStatement = connection.prepareStatement("DELETE FROM avtor WHERE id = ?");
+        deleteStatement.setInt(1, id);
+        deleteStatement.executeUpdate();
     }
 }
