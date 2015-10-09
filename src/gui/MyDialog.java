@@ -12,7 +12,8 @@ import java.sql.SQLException;
  */
 public class MyDialog extends JDialog{
 
-    private JTable table;
+    private JTable avtorTable;
+    private JTable bookTable = new JTable();
     private JButton deleteButton;
     private JButton insertButton;
 
@@ -23,33 +24,55 @@ public class MyDialog extends JDialog{
 
     private void initComponents() {
         setPreferredSize(new Dimension(500,500));
-        table = new JTable();
-        JScrollPane sp = new JScrollPane(table);
-        getContentPane().add(sp);
+
+        avtorTable = new JTable();
+        JScrollPane sp = new JScrollPane(avtorTable);
         deleteButton = new JButton("Удалить");
         insertButton = new JButton("Добавить");
+        JScrollPane scrollPane2 = new JScrollPane(bookTable);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,sp,scrollPane2);
+        splitPane.setDividerLocation(100);
+        getContentPane().add(splitPane);
+
         JPanel panel = new JPanel();
         panel.add(insertButton);
         insertButton.addActionListener(e -> insertRecord());
         deleteButton.addActionListener(e -> deleteRecord());
         panel.add(deleteButton);
         getContentPane().add(panel,BorderLayout.SOUTH);
+
+        JButton showBooksButton = new JButton("Книги");
+        panel.add(showBooksButton);
+        showBooksButton.addActionListener(e -> showBooksByAvtor());
         pack();
     }
 
+    private void showBooksByAvtor() {
+        int selectedRow = avtorTable.getSelectedRow();
+        if (selectedRow==-1) {
+            JOptionPane.showMessageDialog(this, "Сначала выберите автора");
+        } else {
+            TableModel model = avtorTable.getModel();
+            Object idObj = model.getValueAt(selectedRow, 0);
+            Integer id = (Integer) idObj;
+            TableModel model2 = Main.getMain().getBooksByAvtorModel(id);
+            bookTable.setModel(model2);
+        }
+    }
+
     private void deleteRecord() {
-        int selectedRow = table.getSelectedRow();
+        int selectedRow = avtorTable.getSelectedRow();
         if (selectedRow == -1) {
             JOptionPane.showMessageDialog(this,"Не выбрана запись", "Ошибка удаления", JOptionPane.ERROR_MESSAGE);
         } else {
-            Integer id = (Integer) (table.getModel().getValueAt(selectedRow, 0));
-            Object name = table.getModel().getValueAt(selectedRow, 1);
-            Object comment = table.getModel().getValueAt(selectedRow, 2);
+            Integer id = (Integer) (avtorTable.getModel().getValueAt(selectedRow, 0));
+            Object name = avtorTable.getModel().getValueAt(selectedRow, 1);
+            Object comment = avtorTable.getModel().getValueAt(selectedRow, 2);
             int answer = JOptionPane.showConfirmDialog(this, "Удаляем запись: [" + name + " : " + comment + "] ?", "Подтвердите удаление", JOptionPane.YES_NO_OPTION);
             if (answer == JOptionPane.YES_OPTION) {
                 try {
                     Main.getMain().deleteAvtor(id);
-                    table.setModel(Main.getMain().getAvtorsModel(true));
+                    avtorTable.setModel(Main.getMain().getAvtorsModel(true));
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -62,13 +85,13 @@ public class MyDialog extends JDialog{
         String comment = "no comment";
         try {
             Main.getMain().addAvtor(name, comment);
-            table.setModel(Main.getMain().getAvtorsModel(true));
+            avtorTable.setModel(Main.getMain().getAvtorsModel(true));
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     public void setModel(TableModel model) {
-        table.setModel(model);
+        avtorTable.setModel(model);
     }
 }

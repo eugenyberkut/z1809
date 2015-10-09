@@ -25,6 +25,7 @@ public class Main {
             main = this;
             MyFrame myFrame = new MyFrame(this);
             myFrame.setVisible(true);
+            //connection.close();
 //            addAvtor(connection, "Shevchenko", "Ukrainian");
 //            addAvtor(connection, "Hemingway", "American");
 //            viewAvtors(connection);
@@ -69,5 +70,34 @@ public class Main {
         PreparedStatement deleteStatement = connection.prepareStatement("DELETE FROM avtor WHERE id = ?");
         deleteStatement.setInt(1, id);
         deleteStatement.executeUpdate();
+    }
+
+
+    public TableModel createFullTableModel(String text) {
+        try {
+            int pages = text.isEmpty() ? 0 : Integer.parseInt(text);
+            Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            ResultSet resultSet = statement.executeQuery(
+                    "select book.nazvanie, avtor.name, book.pages, izdatelstvo.nazvanie \n" +
+                            "   from book, avtor, izdatelstvo \n" +
+                            "   where book.Avtor_id=avtor.id and book.Izdatelstvo_id = izdatelstvo.id and " +
+                            "   pages > " + pages);
+            return new FullInfoTableModel(resultSet);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public TableModel getBooksByAvtorModel(Integer id) {
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM book WHERE Avtor_id = ?", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            preparedStatement.setInt(1, id);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            return new BookTableModel(resultSet);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
